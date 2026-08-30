@@ -1,0 +1,153 @@
+---
+title: "Agent integrations"
+description: "Connect AI agents to Audream with OpenAPI-compatible tools and safe execution policies."
+---
+
+Audream exposes a REST API and an OpenAPI 3.1 specification that agent frameworks can use to create tools. An agent can search processed notes, retrieve grounded context, upload audio, and run Audream processing workflows.
+
+## Agent entry points
+
+<CardGroup cols={2}>
+  <Card title="OpenAPI specification" icon="brackets-curly" href="/openapi.yaml">
+    Import the complete tool contract, request schemas, and response schemas.
+  </Card>
+  <Card title="LLM index" icon="list" href="https://docs.audream.ai/llms.txt">
+    Discover the most important human-readable and machine-readable resources.
+  </Card>
+  <Card title="Complete agent context" icon="file-lines" href="https://docs.audream.ai/llms-full.txt">
+    Load all Audream guides as a single text document for retrieval or coding agents.
+  </Card>
+  <Card title="Ask across notes" icon="messages" href="/guides/ask-across-notes">
+    Answer questions from processed notes and return the supporting note IDs.
+  </Card>
+</CardGroup>
+
+## Import the OpenAPI contract
+
+Use this URL when an agent platform accepts an OpenAPI document:
+
+```text
+https://docs.audream.ai/openapi.yaml
+```
+
+Configure bearer authentication with an Audream API key stored in the agent runtime's secret manager:
+
+```text
+Authorization: Bearer audream_sk_...
+```
+
+The OpenAPI `operationId` values are stable tool identifiers. Prefer them over generating names from URL paths.
+
+## Recommended tool surface
+
+Do not expose every mutation to an autonomous agent by default. Start with the smallest tool set required by the workflow.
+
+| Operation ID | Mode | Agent use |
+| --- | --- | --- |
+| `getCurrentAccount` | Read | Validate the configured API key and account |
+| `listNotes` | Read | Discover available note IDs and titles |
+| `getNote` | Read | Retrieve one note with completed transcription and Insights |
+| `askWorkspace` | Read and inference | Ask a grounded question across all or selected processed notes |
+| `submitTranscription` | Create | Upload user-selected audio for transcription |
+| `getTranscription` | Read | Poll an asynchronous transcription job |
+| `generateInsights` | Create | Generate structured Insights after transcription |
+| `getInsights` | Read | Poll an asynchronous Insights job |
+| `generateNoteArtifact` | Create | Generate epiphany, deep research, or podcast content |
+| `updateNote` | Mutate | Rename or move a note to trash |
+| `deleteTranscription` | Destructive | Remove generated results while preserving the note |
+| `deleteNote` | Destructive | Permanently delete a note |
+
+<Warning>
+Require explicit user confirmation immediately before `deleteTranscription` or `deleteNote`. Do not treat an earlier general request as deletion approval.
+</Warning>
+
+## Define a compact Ask tool
+
+Agents that only need knowledge retrieval can expose a single tool instead of the complete API:
+
+```json
+{
+  "name": "ask_audream_notes",
+  "description": "Answer a question using processed Audream notes and return supporting note IDs.",
+  "input_schema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["question"],
+    "properties": {
+      "question": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 2000
+      },
+      "note_ids": {
+        "type": ["array", "null"],
+        "maxItems": 100,
+        "items": {
+          "type": "string",
+          "format": "uuid"
+        }
+      }
+    }
+  }
+}
+```
+
+The tool executor calls `POST /v1/ask` and returns the API response without discarding citations:
+
+```python
+import os
+
+import requests
+
+
+def ask_audream_notes(question: str, note_ids: list[str] | None = None) -> dict:
+    response = requests.post(
+        "https://audream-api.tulingbc.com/v1/ask",
+        headers={
+            "Authorization": f"Bearer {os.environ['AUDREAM_API_KEY']}",
+            "Content-Type": "application/json",
+        },
+        json={"question": question, "note_ids": note_ids},
+        timeout=120,
+    )
+    response.raise_for_status()
+    return response.json()
+```
+
+Preserve the returned `note_ids` in the final answer so the user can inspect the source notes.
+
+## Handle asynchronous tools
+
+Transcription, Insights, and artifact generation can return `202 Accepted`. A tool executor must keep the job state outside the language model and poll the corresponding `GET` operation.
+
+1. Return a durable `note_id` from the initial tool call.
+2. Poll at intervals of at least 2 seconds.
+3. Stop on `200` or a documented terminal error.
+4. Apply a bounded deadline and exponential backoff for transient failures.
+5. Never let the agent interpret `202` as a completed result.
+
+See [Processing status](/guides/processing-status) for response handling and idempotency rules.
+
+## Agent execution policy
+
+Use these rules in the agent's system instructions or tool middleware:
+
+```text
+Use Audream only when the user asks about their recordings, notes, transcripts,
+Insights, or generated artifacts. List notes before selecting a note ID unless
+the user supplied a valid ID. Prefer askWorkspace for cross-note questions.
+Treat 202 responses as incomplete and poll the documented status endpoint.
+Never expose the API key. Ask for explicit confirmation immediately before a
+permanent deletion or removal of generated results. Include supporting note IDs
+when an Audream answer returns them.
+```
+
+## Context and privacy
+
+- Keep the API key and Audream responses in a trusted server-side agent runtime.
+- Send only the note content needed for the current task to any additional model provider.
+- Prefer `askWorkspace` when the agent needs an answer rather than complete transcripts.
+- Do not log bearer headers, raw audio, transcripts, or generated artifacts by default.
+- Rotate the key immediately if it appears in a prompt, trace, repository, or client bundle.
+
+Audream currently publishes REST and OpenAPI interfaces. It does not advertise a public MCP endpoint; an MCP host can wrap these REST operations as local tools while preserving the policies above.

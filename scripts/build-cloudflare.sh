@@ -39,4 +39,8 @@ for source_path in "$ROOT_DIR"/guides/*.mdx; do
   install -m 0644 "$source_path" "$BUILD_DIR/guides/$output_name"
 done
 
+node "$ROOT_DIR/scripts/build-agent-context.mjs" \
+  "$ROOT_DIR" \
+  "$BUILD_DIR/llms-full.txt"
+
 echo "Static documentation built at $BUILD_DIR"

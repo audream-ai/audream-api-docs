@@ -9,9 +9,19 @@
 - [Authentication](https://docs.audream.ai/authentication.md)
 - [Audio to insights](https://docs.audream.ai/guides/audio-to-insights.md)
 - [Ask across notes](https://docs.audream.ai/guides/ask-across-notes.md)
+- [Agent integrations](https://docs.audream.ai/guides/agent-integrations.md)
 - [Processing status](https://docs.audream.ai/guides/processing-status.md)
 - [Security](https://docs.audream.ai/guides/security.md)
 
-## API specification
+## Machine-readable resources
 
 - [OpenAPI 3.1](https://docs.audream.ai/openapi.yaml)
+- [Complete documentation context](https://docs.audream.ai/llms-full.txt)
+
+## Agent operating constraints
+
+- Authenticate with a server-side bearer API key beginning with `audream_sk_`.
+- Treat `202 Accepted` as incomplete and poll the corresponding status endpoint.
+- Require explicit user confirmation for permanent note deletion or removal of generated results.
+- Preserve supporting `note_ids` returned by the Ask endpoint.
+- Do not claim that Audream provides a public MCP endpoint.
