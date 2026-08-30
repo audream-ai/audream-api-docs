@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://docs.audream.ai/</loc></url>
+  <url><loc>https://docs.audream.ai/quickstart</loc></url>
+  <url><loc>https://docs.audream.ai/authentication</loc></url>
+  <url><loc>https://docs.audream.ai/guides/audio-to-insights</loc></url>
+  <url><loc>https://docs.audream.ai/guides/ask-across-notes</loc></url>
+  <url><loc>https://docs.audream.ai/guides/processing-status</loc></url>
+  <url><loc>https://docs.audream.ai/guides/security</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/account/get-current-account</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/notes/list-notes</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/notes/get-a-note</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/notes/update-a-note</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/notes/delete-a-note</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/transcription/upload-audio-for-transcription</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/transcription/get-transcription</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/transcription/delete-generated-note-results</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/insights/generate-insights</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/insights/get-insights</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/artifacts/generate-a-note-artifact</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/artifacts/get-a-note-artifact</loc></url>
+  <url><loc>https://docs.audream.ai/api-reference/ask/ask-across-notes</loc></url>
+</urlset>

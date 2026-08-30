@@ -1,0 +1,3 @@
+name = "audream-api-docs"
+pages_build_output_dir = ".cloudflare-pages"
+compatibility_date = "2026-08-30"

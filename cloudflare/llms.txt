@@ -1,0 +1,17 @@
+# Audream API
+
+> Build audio-to-insight workflows with Audream.
+
+## Guides
+
+- [Introduction](https://docs.audream.ai/index.md)
+- [Quickstart](https://docs.audream.ai/quickstart.md)
+- [Authentication](https://docs.audream.ai/authentication.md)
+- [Audio to insights](https://docs.audream.ai/guides/audio-to-insights.md)
+- [Ask across notes](https://docs.audream.ai/guides/ask-across-notes.md)
+- [Processing status](https://docs.audream.ai/guides/processing-status.md)
+- [Security](https://docs.audream.ai/guides/security.md)
+
+## API specification
+
+- [OpenAPI 3.1](https://docs.audream.ai/openapi.yaml)
