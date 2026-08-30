@@ -1,0 +1,39 @@
+---
+title: "Audream API"
+description: "Turn audio into transcripts, structured insights, research, podcasts, and searchable notes."
+---
+
+The Audream API gives your applications the same cloud processing capabilities used by Audream on iOS, Android, and the web.
+
+<CardGroup cols={2}>
+  <Card title="Upload and transcribe" icon="waveform" href="/guides/audio-to-insights">
+    Submit WAV, Opus, Ogg, M4A, MP3, or AAC audio and receive timestamped, speaker-aware transcripts.
+  </Card>
+  <Card title="Generate insights" icon="sparkles" href="/guides/audio-to-insights">
+    Produce summaries, decisions, action items, work plans, and mind maps from a completed transcript.
+  </Card>
+  <Card title="Build optional artifacts" icon="wand-magic-sparkles" href="/api-reference/notes/generate-note-artifact">
+    Generate epiphany, deep research, or podcast artifacts without replacing the note's primary Insights.
+  </Card>
+  <Card title="Ask across notes" icon="messages" href="/api-reference/ask/ask-workspace">
+    Ask grounded questions across selected processed notes.
+  </Card>
+</CardGroup>
+
+## Base URL
+
+```text
+https://audream-api.tulingbc.com
+```
+
+All API requests use HTTPS and JSON, except audio uploads, which use `multipart/form-data`.
+
+## Start here
+
+1. Create an API key from **Settings → Account → API keys** in Audream for iOS, Android, or Web.
+2. Store the key in a server-side secret manager or environment variable.
+3. Follow the [quickstart](/quickstart) to upload and process your first audio file.
+
+<Warning>
+API keys can access the Audream notes and AI processing owned by the account that created them. Never embed a key in a mobile app, browser bundle, public repository, or downloadable executable.
+</Warning>

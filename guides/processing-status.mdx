@@ -1,0 +1,44 @@
+---
+title: "Processing status"
+description: "Handle asynchronous transcription, Insights, and artifact jobs correctly."
+---
+
+Audio and AI generation requests may continue after the initial HTTP request returns. Poll the corresponding `GET` endpoint until it reaches a terminal state.
+
+| Status | Meaning | Client action |
+| --- | --- | --- |
+| `200` | The requested result is ready | Read and persist the response |
+| `202` | Processing is queued or running | Wait at least 2 seconds, then poll again |
+| `404` | The note or result does not exist | Verify the note ID and workflow order |
+| `409` | The requested operation conflicts with current note state | Wait for active processing or complete prerequisites |
+| `422` | Transcription failed | Read `detail`; do not keep polling the failed job |
+| `429` | The service is temporarily rate-limited | Respect `Retry-After` when present |
+| `503` | AI generation is temporarily unavailable or failed | Retry later or inspect the returned detail |
+
+## Recommended polling
+
+Use a 2-second initial interval with a bounded timeout. Add random jitter when many jobs may finish together. Stop polling immediately for terminal errors.
+
+```javascript
+async function waitForTranscription(noteId, apiKey) {
+  const deadline = Date.now() + 30 * 60 * 1000;
+
+  while (Date.now() < deadline) {
+    const response = await fetch(
+      `https://audream-api.tulingbc.com/v1/notes/${noteId}/transcription`,
+      { headers: { Authorization: `Bearer ${apiKey}` } },
+    );
+
+    if (response.status === 200) return response.json();
+    if (response.status !== 202) {
+      throw new Error(await response.text());
+    }
+    await new Promise((resolve) => setTimeout(resolve, 2000));
+  }
+  throw new Error("Transcription timed out");
+}
+```
+
+## Idempotency
+
+The note ID is the workflow identity. Repeating a transcription submission for a note that already has a result returns the existing state instead of creating a second note. Generate a new UUID for a distinct recording.

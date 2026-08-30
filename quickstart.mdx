@@ -1,0 +1,54 @@
+---
+title: "Quickstart"
+description: "Upload audio, wait for transcription, and generate Insights."
+---
+
+## 1. Check authentication
+
+```bash
+curl https://audream-api.tulingbc.com/v1/auth/me \
+  -H "Authorization: Bearer $AUDREAM_API_KEY"
+```
+
+## 2. Upload audio
+
+Generate a UUID for the note, then submit the audio file:
+
+```bash
+NOTE_ID=$(uuidgen | tr '[:upper:]' '[:lower:]')
+
+curl -X POST \
+  "https://audream-api.tulingbc.com/v1/notes/$NOTE_ID/transcription" \
+  -H "Authorization: Bearer $AUDREAM_API_KEY" \
+  -F "file=@meeting.m4a" \
+  -F "title=Product review" \
+  -F "language=auto" \
+  -F "auto_speaker_labeling_enabled=true"
+```
+
+The API returns `202 Accepted` while processing runs asynchronously.
+
+## 3. Poll transcription
+
+```bash
+curl "https://audream-api.tulingbc.com/v1/notes/$NOTE_ID/transcription" \
+  -H "Authorization: Bearer $AUDREAM_API_KEY"
+```
+
+- `200` means transcription is complete.
+- `202` means processing is still active.
+- `422` means transcription failed; read the response `detail`.
+
+## 4. Generate Insights
+
+After transcription succeeds, send the transcription object to the Insights endpoint:
+
+```bash
+curl -X POST \
+  "https://audream-api.tulingbc.com/v1/notes/$NOTE_ID/insights" \
+  -H "Authorization: Bearer $AUDREAM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @insights-request.json
+```
+
+See [Audio to Insights](/guides/audio-to-insights) for a complete Python example that performs this flow automatically.

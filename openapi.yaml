@@ -1,0 +1,737 @@
+openapi: 3.1.0
+info:
+  title: Audream API
+  version: 1.0.0
+  description: |
+    Upload audio, create speaker-aware transcripts, generate structured Insights,
+    and work with Audream notes. Authenticate with an API key created in any
+    Audream client's Account settings.
+  contact:
+    name: Audream Support
+    email: support@audream.ai
+servers:
+  - url: https://audream-api.tulingbc.com
+    description: Production
+security:
+  - bearerAuth: []
+tags:
+  - name: Account
+    description: Inspect the account associated with an API key.
+  - name: Notes
+    description: List, retrieve, update, and delete notes.
+  - name: Transcription
+    description: Upload audio and retrieve speaker-aware transcripts.
+  - name: Insights
+    description: Generate summaries, decisions, action items, and mind maps.
+  - name: Artifacts
+    description: Generate optional epiphany, deep research, and podcast artifacts.
+  - name: Ask
+    description: Ask grounded questions across processed notes.
+paths:
+  /v1/auth/me:
+    get:
+      operationId: getCurrentAccount
+      tags: [Account]
+      summary: Get current account
+      description: Returns the Audream user associated with the supplied API key.
+      responses:
+        "200":
+          description: Account details.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/notes:
+    get:
+      operationId: listNotes
+      tags: [Notes]
+      summary: List notes
+      description: Lists non-deleted notes owned by the authenticated account. Result bodies are omitted from this summary response.
+      responses:
+        "200":
+          description: Note summaries ordered by most recent update.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/NoteSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /v1/notes/{note_id}:
+    parameters:
+      - $ref: "#/components/parameters/NoteId"
+    get:
+      operationId: getNote
+      tags: [Notes]
+      summary: Get a note
+      description: Returns note metadata and any completed transcription and Insights.
+      responses:
+        "200":
+          description: Complete note.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      operationId: updateNote
+      tags: [Notes]
+      summary: Update a note
+      description: Updates the supplied note fields. Omitted fields remain unchanged.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NoteUpdate"
+            examples:
+              rename:
+                value:
+                  title: Product review
+              moveToTrash:
+                value:
+                  is_trashed: true
+      responses:
+        "200":
+          description: Updated note.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Note"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      operationId: deleteNote
+      tags: [Notes]
+      summary: Delete a note
+      description: Permanently deletes the note and its cached processing data.
+      responses:
+        "200":
+          description: Note deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /v1/notes/{note_id}/transcription:
+    parameters:
+      - $ref: "#/components/parameters/NoteId"
+    post:
+      operationId: submitTranscription
+      tags: [Transcription]
+      summary: Upload audio for transcription
+      description: |
+        Uploads an audio file and queues transcription. The note ID must be a
+        client-generated UUID. The endpoint accepts WAV, Opus, Ogg, M4A, MP3,
+        and AAC files.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  contentMediaType: application/octet-stream
+                  description: Audio file to process.
+                title:
+                  type: string
+                  maxLength: 256
+                  default: Audio note
+                language:
+                  type: string
+                  description: Language code or `auto` for detection.
+                  example: auto
+                hotwords:
+                  type: string
+                  description: Space-separated vocabulary hints for transcription.
+                template_instructions:
+                  type: string
+                  maxLength: 4000
+                  description: Optional instructions forwarded to downstream Insights generation.
+                automatic_artifacts:
+                  type: string
+                  description: Optional JSON array string containing artifact kinds to generate after Insights.
+                  example: '["epiphany","deep_research"]'
+                auto_speaker_labeling_enabled:
+                  type: boolean
+                  default: true
+      responses:
+        "202":
+          description: Transcription was queued or is already active.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "413":
+          description: The uploaded audio exceeds the configured upload limit.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    get:
+      operationId: getTranscription
+      tags: [Transcription]
+      summary: Get transcription
+      description: Returns `200` when the transcript is ready or `202` while processing continues.
+      responses:
+        "200":
+          description: Completed transcription.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Transcription"
+        "202":
+          description: Transcription is queued or processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: Transcription failed.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/Error"
+                  - type: object
+                    properties:
+                      status:
+                        const: failed
+    delete:
+      operationId: deleteTranscription
+      tags: [Transcription]
+      summary: Delete generated note results
+      description: Clears generated transcription and Insights while preserving the note title.
+      responses:
+        "200":
+          description: Generated results deleted.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeleteResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /v1/notes/{note_id}/insights:
+    parameters:
+      - $ref: "#/components/parameters/NoteId"
+    post:
+      operationId: generateInsights
+      tags: [Insights]
+      summary: Generate Insights
+      description: Generates structured Insights from a completed Audream transcription result.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InsightsRequest"
+      responses:
+        "200":
+          description: Insights completed within the request window.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insights"
+        "202":
+          description: Insights generation is still processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          description: The LLM provider is rate-limited. Respect the `Retry-After` header when present.
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "502":
+          description: The Insights provider could not produce a valid result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    get:
+      operationId: getInsights
+      tags: [Insights]
+      summary: Get Insights
+      responses:
+        "200":
+          description: Completed Insights.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Insights"
+        "202":
+          description: Insights generation is processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          description: Insights generation failed or is temporarily unavailable.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+
+  /v1/notes/{note_id}/artifacts/{artifact_kind}:
+    parameters:
+      - $ref: "#/components/parameters/NoteId"
+      - name: artifact_kind
+        in: path
+        required: true
+        description: Optional AI artifact to generate.
+        schema:
+          $ref: "#/components/schemas/ArtifactKind"
+    post:
+      operationId: generateNoteArtifact
+      tags: [Artifacts]
+      summary: Generate a note artifact
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                language:
+                  type: string
+                  enum: [auto, zh, en]
+                  default: auto
+                regenerate:
+                  type: boolean
+                  default: false
+      responses:
+        "200":
+          description: Existing or newly completed artifact.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "202":
+          description: Artifact generation was queued or is processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+    get:
+      operationId: getNoteArtifact
+      tags: [Artifacts]
+      summary: Get a note artifact
+      responses:
+        "200":
+          description: Completed artifact.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Artifact"
+        "202":
+          description: Artifact generation is processing.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProcessingState"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "503":
+          description: Artifact generation failed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /v1/ask:
+    post:
+      operationId: askWorkspace
+      tags: [Ask]
+      summary: Ask across notes
+      description: Answers only from processed notes owned by the authenticated account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [question]
+              properties:
+                question:
+                  type: string
+                  minLength: 1
+                  maxLength: 2000
+                note_ids:
+                  type:
+                    - array
+                    - "null"
+                  maxItems: 100
+                  items:
+                    type: string
+                    format: uuid
+                  description: Limit the question to these notes. Omit to search all processed notes.
+            example:
+              question: What decisions were made about the launch date?
+              note_ids: null
+      responses:
+        "200":
+          description: Grounded answer and supporting note IDs.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [answer, note_ids]
+                properties:
+                  answer:
+                    type: string
+                  note_ids:
+                    type: array
+                    items:
+                      type: string
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Audream API key
+      description: API key beginning with `audream_sk_`.
+  parameters:
+    NoteId:
+      name: note_id
+      in: path
+      required: true
+      description: Client-generated note UUID.
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Invalid request or workflow prerequisites were not met.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: API key is missing, invalid, or revoked.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: The requested resource was not found for this account.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Conflict:
+      description: The request conflicts with the current processing state.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ValidationError:
+      description: Request validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    Error:
+      type: object
+      required: [detail]
+      properties:
+        detail:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                type: object
+    User:
+      type: object
+      required: [id, email, subscription_tier, transcript_correction_level, created_at]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+        nickname:
+          type:
+            - string
+            - "null"
+        email_verified_at:
+          type:
+            - number
+            - "null"
+        two_step_enabled:
+          type: boolean
+        subscription_tier:
+          type: string
+          enum: [free, pro, max]
+        transcript_correction_level:
+          type: string
+          enum: [off, high, max]
+        google_connected:
+          type: boolean
+        apple_connected:
+          type: boolean
+        created_at:
+          type: number
+    NoteSummary:
+      type: object
+      required: [note_id, title, status, has_transcription, has_insights, created_at, updated_at]
+      properties:
+        note_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        status:
+          type: string
+        has_transcription:
+          type: boolean
+        has_insights:
+          type: boolean
+        error:
+          type:
+            - string
+            - "null"
+        created_at:
+          type: number
+        updated_at:
+          type: number
+        folder_id:
+          type:
+            - string
+            - "null"
+        is_trashed:
+          type: boolean
+        template_id:
+          type:
+            - string
+            - "null"
+    Note:
+      allOf:
+        - $ref: "#/components/schemas/NoteSummary"
+        - type: object
+          properties:
+            transcription:
+              oneOf:
+                - $ref: "#/components/schemas/Transcription"
+                - type: "null"
+            insights:
+              oneOf:
+                - $ref: "#/components/schemas/Insights"
+                - type: "null"
+    NoteUpdate:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 256
+        folder_id:
+          type:
+            - string
+            - "null"
+          maxLength: 128
+        is_trashed:
+          type: boolean
+        template_id:
+          type:
+            - string
+            - "null"
+          maxLength: 128
+    ProcessingState:
+      type: object
+      properties:
+        note_id:
+          type: string
+        status:
+          type: string
+          examples: [queued, processing]
+        stage:
+          type: string
+        title:
+          type: string
+        created_at:
+          type: number
+        updated_at:
+          type: number
+      additionalProperties: true
+    TranscriptSegment:
+      type: object
+      required: [start_ms, end_ms, speaker, text]
+      properties:
+        start_ms:
+          type: integer
+          minimum: 0
+        end_ms:
+          type: integer
+          minimum: 0
+        speaker:
+          type: string
+        text:
+          type: string
+        has_overlap:
+          type: boolean
+    Transcription:
+      type: object
+      properties:
+        full_text:
+          type: string
+        timestamped_full_text:
+          type: string
+        conversation_segments:
+          type: array
+          items:
+            $ref: "#/components/schemas/TranscriptSegment"
+      additionalProperties: true
+    InsightsRequest:
+      type: object
+      required: [result]
+      properties:
+        result:
+          $ref: "#/components/schemas/Transcription"
+        title:
+          type:
+            - string
+            - "null"
+          maxLength: 256
+        speaker_labels:
+          type:
+            - object
+            - "null"
+          additionalProperties:
+            type: string
+        template_instructions:
+          type:
+            - string
+            - "null"
+          maxLength: 4000
+    ActionItem:
+      type: object
+      properties:
+        task:
+          type: string
+        owner:
+          type:
+            - string
+            - "null"
+        due:
+          type:
+            - string
+            - "null"
+    Insights:
+      type: object
+      properties:
+        note_id:
+          type: string
+        title:
+          type: string
+        abstract:
+          type: string
+        summary:
+          type: array
+          items:
+            type: string
+        decisions:
+          type: array
+          items:
+            type: string
+        action_items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActionItem"
+        risks:
+          type: array
+          items:
+            type: string
+        open_questions:
+          type: array
+          items:
+            type: string
+        mind_map: {}
+      additionalProperties: true
+    ArtifactKind:
+      type: string
+      enum: [epiphany, deep_research, podcast]
+    Artifact:
+      type: object
+      required: [note_id, kind]
+      properties:
+        note_id:
+          type: string
+        kind:
+          $ref: "#/components/schemas/ArtifactKind"
+        title:
+          type: string
+        content: {}
+      additionalProperties: true
+    DeleteResponse:
+      type: object
+      required: [deleted]
+      properties:
+        deleted:
+          type: boolean

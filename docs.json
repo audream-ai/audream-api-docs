@@ -1,0 +1,76 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Audream API",
+  "description": "Build audio-to-insight workflows with Audream.",
+  "colors": {
+    "primary": "#12746E",
+    "light": "#178D85",
+    "dark": "#0B5954"
+  },
+  "favicon": "/images/audream-app-icon.png",
+  "api": {
+    "openapi": "openapi.yaml",
+    "playground": {
+      "display": "interactive"
+    },
+    "url": "full",
+    "examples": {
+      "languages": ["curl", "python", "javascript", "swift", "kotlin"],
+      "defaults": "required",
+      "prefill": true,
+      "autogenerate": true
+    }
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "pages": [
+          {
+            "group": "Get started",
+            "pages": ["index", "quickstart", "authentication"]
+          },
+          {
+            "group": "Build with Audream",
+            "pages": ["guides/audio-to-insights", "guides/processing-status", "guides/security"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "openapi": "openapi.yaml"
+      }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Audream Web",
+          "href": "https://web.audream.ai",
+          "icon": "waveform"
+        }
+      ]
+    }
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:support@audream.ai"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Open Audream",
+      "href": "https://web.audream.ai"
+    }
+  },
+  "contextual": {
+    "options": ["copy", "view", "download-spec", "chatgpt", "claude", "cursor", "vscode"]
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/caiqinghua/audream-api-docs"
+    }
+  }
+}

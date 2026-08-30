@@ -1,0 +1,102 @@
+---
+title: "Audio to Insights"
+description: "Run the complete asynchronous audio processing workflow."
+---
+
+This example uploads an audio file, waits for transcription, and generates structured Insights.
+
+```python
+import os
+import time
+import uuid
+
+import requests
+
+BASE_URL = "https://audream-api.tulingbc.com"
+API_KEY = os.environ["AUDREAM_API_KEY"]
+HEADERS = {"Authorization": f"Bearer {API_KEY}"}
+
+note_id = str(uuid.uuid4())
+audio_path = "meeting.m4a"
+
+with open(audio_path, "rb") as audio:
+    response = requests.post(
+        f"{BASE_URL}/v1/notes/{note_id}/transcription",
+        headers=HEADERS,
+        files={"file": (audio_path, audio)},
+        data={
+            "title": "Product review",
+            "language": "auto",
+            "auto_speaker_labeling_enabled": "true",
+        },
+        timeout=120,
+    )
+response.raise_for_status()
+
+while True:
+    response = requests.get(
+        f"{BASE_URL}/v1/notes/{note_id}/transcription",
+        headers=HEADERS,
+        timeout=30,
+    )
+    if response.status_code == 200:
+        transcription = response.json()
+        break
+    if response.status_code == 202:
+        time.sleep(2)
+        continue
+    response.raise_for_status()
+
+response = requests.post(
+    f"{BASE_URL}/v1/notes/{note_id}/insights",
+    headers=HEADERS,
+    json={
+        "result": transcription,
+        "title": "Product review",
+    },
+    timeout=900,
+)
+
+if response.status_code == 202:
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/v1/notes/{note_id}/insights",
+            headers=HEADERS,
+            timeout=30,
+        )
+        if response.status_code == 200:
+            break
+        if response.status_code != 202:
+            response.raise_for_status()
+        time.sleep(2)
+
+response.raise_for_status()
+insights = response.json()
+print(insights.get("abstract"))
+```
+
+## Supported audio formats
+
+The transcription endpoint accepts files ending in:
+
+- `.wav`
+- `.opus`
+- `.ogg`
+- `.m4a`
+- `.mp3`
+- `.aac`
+
+## Optional artifacts
+
+After transcription completes, you can generate an additional artifact without replacing the note's Insights:
+
+```python
+response = requests.post(
+    f"{BASE_URL}/v1/notes/{note_id}/artifacts/deep_research",
+    headers=HEADERS,
+    json={"language": "auto", "regenerate": False},
+    timeout=30,
+)
+```
+
+Supported artifact kinds are `epiphany`, `deep_research`, and `podcast`.

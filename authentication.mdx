@@ -1,0 +1,41 @@
+---
+title: "Authentication"
+description: "Create, use, and revoke Audream API keys safely."
+---
+
+Audream authenticates public API requests with bearer API keys. Keys begin with `audream_sk_`.
+
+## Create a key
+
+API keys are available from the Account settings in every Audream client:
+
+- **iOS:** Settings → Account → API keys
+- **Android:** Settings → Account → API keys
+- **Web:** Settings → Account → API keys
+
+Enter a descriptive name such as `Production backend` or `Local automation`. Audream displays the complete key once. Only a one-way SHA-256 hash is retained by the service.
+
+## Send the key
+
+Pass the key in the `Authorization` header:
+
+```bash
+curl https://audream-api.tulingbc.com/v1/auth/me \
+  -H "Authorization: Bearer $AUDREAM_API_KEY"
+```
+
+```bash
+export AUDREAM_API_KEY='audream_sk_...'
+```
+
+<Note>
+API keys cannot create, list, or revoke other API keys. Key management always requires an interactive Audream login session.
+</Note>
+
+## Revoke a key
+
+Open the API key page in any Audream client and choose **Revoke**. Revocation takes effect immediately. Requests made with the revoked key return `401 Unauthorized`.
+
+## Permissions
+
+The initial API key release uses note-level account access. A key can read, create, update, process, and delete notes owned by its account. It cannot manage login sessions, account security settings, or other API keys. Fine-grained scopes are not yet available.

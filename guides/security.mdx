@@ -1,0 +1,28 @@
+---
+title: "Security"
+description: "Protect Audream API keys and user data."
+---
+
+## Keep keys server-side
+
+Treat an Audream API key like a password. Store it in a secret manager or server environment variable. Do not include it in:
+
+- browser JavaScript bundles
+- iOS or Android application binaries
+- desktop application resources
+- public or private source files committed to Git
+- logs, analytics events, screenshots, or support messages
+
+If an untrusted client needs Audream data, call Audream from your backend and expose only the minimum data that client requires.
+
+## Rotate credentials
+
+Create a replacement key, update your service, verify requests with the new key, then revoke the old key. Audream supports up to 10 active keys per account.
+
+## Audio handling
+
+Audio is uploaded for processing. Audream's note API persists transcription and generated artifacts, while source audio is handled by the transient processing cache rather than exposed as permanent cloud file storage.
+
+## Handle unauthorized responses
+
+A `401` response means the key is missing, malformed, unknown, or revoked. Do not retry indefinitely. Stop the integration and rotate or reconfigure the key.
