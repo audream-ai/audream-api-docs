@@ -18,7 +18,14 @@ if ! wrangler pages project list --json | node -e '
   process.stdin.on("data", (chunk) => { input += chunk; });
   process.stdin.on("end", () => {
     const projects = JSON.parse(input);
-    process.exit(projects.some((project) => project.name === "audream-api-docs") ? 0 : 1);
+    process.exit(
+      projects.some(
+        (project) =>
+          (project.name ?? project["Project Name"]) === "audream-api-docs",
+      )
+        ? 0
+        : 1,
+    );
   });
 '; then
   wrangler pages project create "$PROJECT_NAME" --production-branch "$PRODUCTION_BRANCH"
