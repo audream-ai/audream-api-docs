@@ -33,7 +33,7 @@
           },
           {
             "group": "Build with Audream",
-            "pages": ["guides/audio-to-insights", "guides/processing-status", "guides/security"]
+            "pages": ["guides/audio-to-insights", "guides/ask-across-notes", "guides/processing-status", "guides/security"]
           }
         ]
       },

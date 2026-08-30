@@ -1,0 +1,63 @@
+---
+title: "Ask across notes"
+description: "Answer questions from the processed notes in an Audream account."
+---
+
+The Ask endpoint answers questions using completed Audream notes as its source material. It returns the note IDs that support the answer.
+
+## Ask all processed notes
+
+Omit `note_ids` to search every available processed note in the authenticated account:
+
+```bash
+curl -X POST https://audream-api.tulingbc.com/v1/ask \
+  -H "Authorization: Bearer $AUDREAM_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "question": "What decisions were made about the launch date?"
+  }'
+```
+
+## Limit the question to selected notes
+
+Pass up to 100 note IDs when the answer should only use a known set of recordings:
+
+```python
+import os
+
+import requests
+
+response = requests.post(
+    "https://audream-api.tulingbc.com/v1/ask",
+    headers={"Authorization": f"Bearer {os.environ['AUDREAM_API_KEY']}"},
+    json={
+        "question": "Which launch risks are still unresolved?",
+        "note_ids": [
+            "032d7b51-d476-42e7-8d89-b0a5b17b040a",
+            "970be2ea-b095-4a3f-865e-954063964ef5",
+        ],
+    },
+    timeout=120,
+)
+response.raise_for_status()
+print(response.json())
+```
+
+The response contains the generated answer and the supporting note IDs:
+
+```json
+{
+  "answer": "The team kept the September launch target and identified certification as the remaining schedule risk.",
+  "note_ids": ["032d7b51-d476-42e7-8d89-b0a5b17b040a"]
+}
+```
+
+<Note>
+Ask only uses notes owned by the authenticated account. Deleted and trashed notes are excluded.
+</Note>
+
+## Error handling
+
+- `400` means no processed notes were available for the requested scope.
+- `429` means the AI provider is temporarily rate-limited.
+- `502` means an answer could not be generated; retry later.
