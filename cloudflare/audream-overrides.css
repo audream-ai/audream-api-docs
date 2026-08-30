@@ -1,0 +1,3 @@
+a[href^="https://www.mintlify.com"][href*="utm_campaign=poweredBy"] {
+  display: none !important;
+}

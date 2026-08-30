@@ -25,6 +25,9 @@ install -m 0644 "$ROOT_DIR/cloudflare/_redirects" "$BUILD_DIR/_redirects"
 install -m 0644 "$ROOT_DIR/cloudflare/robots.txt" "$BUILD_DIR/robots.txt"
 install -m 0644 "$ROOT_DIR/cloudflare/sitemap.xml" "$BUILD_DIR/sitemap.xml"
 install -m 0644 "$ROOT_DIR/cloudflare/llms.txt" "$BUILD_DIR/llms.txt"
+install -m 0644 "$ROOT_DIR/cloudflare/audream-overrides.css" "$BUILD_DIR/audream-overrides.css"
+
+node "$ROOT_DIR/scripts/postprocess-cloudflare.mjs" "$BUILD_DIR"
 
 install -m 0644 "$ROOT_DIR/index.mdx" "$BUILD_DIR/index.md"
 install -m 0644 "$ROOT_DIR/quickstart.mdx" "$BUILD_DIR/quickstart.md"
