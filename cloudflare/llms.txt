@@ -18,7 +18,7 @@
 - [Agent Skill](https://docs.audream.ai/skill.md)
 - [Agent Skill metadata](https://docs.audream.ai/skill.json)
 - [Remote MCP server](https://audream-api.tulingbc.com/mcp)
-- [Audream CLI](https://github.com/caiqinghua/audream-cli)
+- [Audream CLI](https://github.com/audream-ai/audream-cli)
 - [OpenAPI 3.1](https://docs.audream.ai/openapi.yaml)
 - [Complete documentation context](https://docs.audream.ai/llms-full.txt)
 

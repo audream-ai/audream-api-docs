@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "description": "Work with Audream recordings, Notes, transcripts, Insights, artifacts, and grounded workspace questions.",
   "homepage": "https://docs.audream.ai/guides/agent-integrations",
-  "repository": "https://github.com/caiqinghua/audream-api-docs/tree/main/skills/audream",
+  "repository": "https://github.com/audream-ai/audream-api-docs/tree/main/skills/audream",
   "skill": "https://docs.audream.ai/skill.md",
   "openapi": "https://docs.audream.ai/openapi.yaml",
   "mcp": "https://audream-api.tulingbc.com/mcp",
-  "cli": "https://github.com/caiqinghua/audream-cli"
+  "cli": "https://github.com/audream-ai/audream-cli"
 }

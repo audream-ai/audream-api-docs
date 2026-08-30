@@ -13,7 +13,7 @@
 Install from the public repository:
 
 ```bash
-npm install --global github:caiqinghua/audream-cli
+npm install --global github:audream-ai/audream-cli
 ```
 
 Set the API key in the process environment:
