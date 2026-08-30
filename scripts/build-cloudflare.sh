@@ -26,6 +26,16 @@ install -m 0644 "$ROOT_DIR/cloudflare/robots.txt" "$BUILD_DIR/robots.txt"
 install -m 0644 "$ROOT_DIR/cloudflare/sitemap.xml" "$BUILD_DIR/sitemap.xml"
 install -m 0644 "$ROOT_DIR/cloudflare/llms.txt" "$BUILD_DIR/llms.txt"
 install -m 0644 "$ROOT_DIR/cloudflare/audream-overrides.css" "$BUILD_DIR/audream-overrides.css"
+install -m 0644 "$ROOT_DIR/skills/audream/SKILL.md" "$BUILD_DIR/skill.md"
+install -m 0644 "$ROOT_DIR/skill.json.template" "$BUILD_DIR/skill.json"
+
+mkdir -p "$BUILD_DIR/references" "$BUILD_DIR/skills/audream/references"
+install -m 0644 "$ROOT_DIR/skills/audream/SKILL.md" "$BUILD_DIR/skills/audream/SKILL.md"
+install -m 0644 "$ROOT_DIR/skills/audream/agents/openai.yaml" "$BUILD_DIR/skills/audream/agents-openai.yaml"
+for source_path in "$ROOT_DIR"/skills/audream/references/*.md; do
+  install -m 0644 "$source_path" "$BUILD_DIR/references/$(basename "$source_path")"
+  install -m 0644 "$source_path" "$BUILD_DIR/skills/audream/references/$(basename "$source_path")"
+done
 
 node "$ROOT_DIR/scripts/postprocess-cloudflare.mjs" "$BUILD_DIR"
 

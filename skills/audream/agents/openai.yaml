@@ -1,0 +1,4 @@
+interface:
+  display_name: "Audream"
+  short_description: "Work with Audream notes, transcripts, and Insights"
+  default_prompt: "Use Audream to work with my recordings and processed notes."

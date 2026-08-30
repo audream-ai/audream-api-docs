@@ -15,13 +15,18 @@
 
 ## Machine-readable resources
 
+- [Agent Skill](https://docs.audream.ai/skill.md)
+- [Agent Skill metadata](https://docs.audream.ai/skill.json)
+- [Remote MCP server](https://audream-api.tulingbc.com/mcp)
+- [Audream CLI](https://github.com/caiqinghua/audream-cli)
 - [OpenAPI 3.1](https://docs.audream.ai/openapi.yaml)
 - [Complete documentation context](https://docs.audream.ai/llms-full.txt)
 
 ## Agent operating constraints
 
-- Authenticate with a server-side bearer API key beginning with `audream_sk_`.
+- Prefer OAuth-authenticated remote MCP for interactive agents, the CLI for local audio, and REST for application integrations.
+- Authenticate CLI and REST calls with a server-side bearer API key beginning with `audream_sk_`.
 - Treat `202 Accepted` as incomplete and poll the corresponding status endpoint.
 - Require explicit user confirmation for permanent note deletion or removal of generated results.
 - Preserve supporting `note_ids` returned by the Ask endpoint.
-- Do not claim that Audream provides a public MCP endpoint.
+- Do not send local audio through MCP as base64; use the CLI upload workflow.

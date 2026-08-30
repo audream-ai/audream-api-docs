@@ -11,6 +11,7 @@ command -v wrangler >/dev/null 2>&1 || {
   exit 1
 }
 
+"$ROOT_DIR/scripts/validate.sh"
 "$ROOT_DIR/scripts/build-cloudflare.sh"
 
 if ! wrangler pages project list --json | node -e '

@@ -13,8 +13,7 @@ mint dev
 Validate changes before publishing:
 
 ```bash
-mint validate
-mint broken-links
+./scripts/validate.sh
 ```
 
 ## Production deployment
@@ -39,3 +38,5 @@ the current Git commit from the `main` branch. Generated files are written to
 The production site is `https://docs.audream.ai`.
 
 The production API base URL is `https://audream-api.tulingbc.com`.
+The Agent Skill is published at `https://docs.audream.ai/skill.md`, and the
+remote MCP server is `https://audream-api.tulingbc.com/mcp`.

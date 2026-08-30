@@ -3,11 +3,20 @@ title: "Agent integrations"
 description: "Connect AI agents to Audream with OpenAPI-compatible tools and safe execution policies."
 ---
 
-Audream exposes a REST API and an OpenAPI 3.1 specification that agent frameworks can use to create tools. An agent can search processed notes, retrieve grounded context, upload audio, and run Audream processing workflows.
+Audream provides a standard Agent Skill, a remote MCP server, a cross-platform CLI, and a REST/OpenAPI contract. Choose the narrowest interface that fits the workflow: MCP for interactive agents, the CLI for local files and automation, and REST for application integrations.
 
 ## Agent entry points
 
 <CardGroup cols={2}>
+  <Card title="Agent Skill" icon="sparkles" href="https://docs.audream.ai/skill.md">
+    Install reusable Audream workflow and safety instructions in an Agent Skills-compatible host.
+  </Card>
+  <Card title="Remote MCP" icon="plug" href="https://audream-api.tulingbc.com/mcp">
+    Connect an agent with OAuth 2.1 and expose scoped Audream tools without copying an API key.
+  </Card>
+  <Card title="Audream CLI" icon="terminal" href="https://github.com/caiqinghua/audream-cli">
+    Upload local audio, poll processing jobs, query Notes, and generate artifacts from scripts.
+  </Card>
   <Card title="OpenAPI specification" icon="brackets-curly" href="/openapi.yaml">
     Import the complete tool contract, request schemas, and response schemas.
   </Card>
@@ -22,6 +31,60 @@ Audream exposes a REST API and an OpenAPI 3.1 specification that agent framework
   </Card>
 </CardGroup>
 
+## Install the Agent Skill
+
+The complete skill directory is public at:
+
+```text
+https://github.com/caiqinghua/audream-api-docs/tree/main/skills/audream
+```
+
+Machine-readable entry points:
+
+```text
+https://docs.audream.ai/skill.md
+https://docs.audream.ai/skill.json
+```
+
+Install the `skills/audream` directory in an Agent Skills-compatible host. The skill selects MCP, CLI, or REST based on the task and loads detailed references only when needed.
+
+## Connect the remote MCP server
+
+Use this Streamable HTTP URL:
+
+```text
+https://audream-api.tulingbc.com/mcp
+```
+
+Audream publishes OAuth authorization-server and protected-resource metadata. Compatible MCP clients discover OAuth automatically, open Audream Web for account authorization, use authorization code with PKCE, and receive a resource-bound access token.
+
+Default authorization grants read and processing access. Additional scopes are requested when the client needs them:
+
+| Scope | Access |
+| --- | --- |
+| `notes:read` | Read Notes, transcripts, Insights, and artifacts |
+| `notes:write` | Rename and organize Notes |
+| `notes:process` | Ask questions and generate Insights or artifacts |
+| `notes:delete` | Run confirmed permanent deletion operations |
+
+The MCP server exposes Note discovery, retrieval, workspace Ask, updates, Insights, artifacts, and confirmed deletion. Local audio upload is intentionally excluded because passing large audio as base64 through model context is inefficient and unsafe; use the CLI for local files.
+
+## Install the CLI
+
+The CLI requires Node.js 20 or newer and has no runtime package dependencies:
+
+```bash
+npm install --global github:caiqinghua/audream-cli
+export AUDREAM_API_KEY="audream_sk_..."
+
+audream auth status
+audream notes list
+audream transcribe ./meeting.m4a --title "Planning meeting" --wait
+audream insights generate NOTE_ID --wait
+```
+
+It emits JSON to stdout and diagnostics to stderr. Permanent deletion commands require an exact `--confirm NOTE_ID` value.
+
 ## Import the OpenAPI contract
 
 Use this URL when an agent platform accepts an OpenAPI document:
@@ -30,7 +93,7 @@ Use this URL when an agent platform accepts an OpenAPI document:
 https://docs.audream.ai/openapi.yaml
 ```
 
-Configure bearer authentication with an Audream API key stored in the agent runtime's secret manager:
+For direct REST tools, configure bearer authentication with an Audream API key stored in the agent runtime's secret manager:
 
 ```text
 Authorization: Bearer audream_sk_...
@@ -150,4 +213,4 @@ when an Audream answer returns them.
 - Do not log bearer headers, raw audio, transcripts, or generated artifacts by default.
 - Rotate the key immediately if it appears in a prompt, trace, repository, or client bundle.
 
-Audream currently publishes REST and OpenAPI interfaces. It does not advertise a public MCP endpoint; an MCP host can wrap these REST operations as local tools while preserving the policies above.
+Remote MCP tokens are audience-bound to the Audream MCP resource and must not be forwarded to REST endpoints or other services. REST API keys remain the appropriate credential for the CLI and server-side application integrations.
